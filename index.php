@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Snake Classic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #4CAF50;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            border: 4px solid #444;
+        }
+
+        canvas { display: block; background-color: #000; }
+
+        #score { font-size: 18px; margin-bottom: 15px; color: #4CAF50; }
+
+        /* GLITCH EFFECT */
+        #glitch-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 999;
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        /* WINDOWS STYLE MODAL */
+        #scary-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            width: 450px;
+            border: 1px solid #0067b8;
+            z-index: 1000;
+            font-family: "Segoe UI", "Arial", sans-serif; /* Windows Default */
+            color: #000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5), 0 0 0 1000px rgba(0,0,0,0.8);
+        }
+
+        .modal-header {
+            background: #fff;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            color: #e81123;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            padding: 20px 30px;
+            background: #fff;
+        }
+
+        .warning-icon {
+            color: #e81123;
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .hacked-title {
+            font-size: 20px;
+            color: #000;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+
+        .princess-text {
+            background: #f2f2f2;
+            padding: 10px;
+            border-left: 4px solid #0067b8;
+            font-style: italic;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .fix-btn {
+            display: block;
+            width: 100%;
+            background: #0067b8;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            text-decoration: none;
+            font-weight: 400;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .fix-btn:hover { background: #005a9e; }
+
+        @keyframes shake {
+            0% { transform: translate(2px, 1px); }
+            50% { transform: translate(-2px, -1px); }
+            100% { transform: translate(2px, 1px); }
+        }
+        .shaking { animation: shake 0.1s infinite; }
+    </style>
+</head>
+<body>
+
+    <audio id="prankAudio" src="prank.mp3"></audio>
+
+    <div id="score">Score: 0</div>
+
+    <div id="game-container">
+        <canvas id="snakeGame" width="400" height="400"></canvas>
+    </div>
+
+    <div id="glitch-overlay">
+        <div id="progress-box" style="width: 300px; border: 1px solid #fff; padding: 2px;">
+            <div id="bar" style="width: 0%; height: 20px; background: #0067b8;"></div>
+        </div>
+        <p id="status-text" style="margin-top: 10px;">Scanning system files...</p>
+    </div>
+
+    <div id="scary-modal">
+        <div class="modal-header">
+            <span>Windows Security Center</span>
+        </div>
+        <div class="modal-body">
+            <div class="warning-icon">⚠️</div>
+            <h2 class="hacked-title">Threat Detected: Remote Access Trojan</h2>
+            <p style="font-size: 14px;">Windows has detected an unauthorized connection from a suspicious IP. Your private data is being exported.</p>
+            
+            <div class="princess-text">
+                "System has detected a malicious activity."
+            </div>
+
+            <p style="font-size: 13px; color: #666;">Unknown script running in C:/Users/Admin/Classic_Snake...</p>
+            
+            <a href="main.php" class="fix-btn">Restore System Stability</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("snakeGame");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+        const glitch = document.getElementById("glitch-overlay");
+        const modal = document.getElementById("scary-modal");
+        const bar = document.getElementById("bar");
+        const status = document.getElementById("status-text");
+        const prankAudio = document.getElementById("prankAudio");
+
+        const box = 20;
+        let score = 0;
+        let gameActive = true;
+        let snake = [{ x: 9 * box, y: 10 * box }];
+        let food = { x: Math.floor(Math.random()*19+1)*box, y: Math.floor(Math.random()*19+1)*box };
+        let d;
+
+        document.addEventListener("keydown", (e) => {
+            if(e.keyCode == 37 && d != "RIGHT") d = "LEFT";
+            if(e.keyCode == 38 && d != "DOWN") d = "UP";
+            if(e.key == "ArrowRight" && d != "LEFT") d = "RIGHT";
+            if(e.key == "ArrowDown" && d != "UP") d = "DOWN";
+        });
+
+        function draw() {
+            if(!gameActive) return;
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            for(let i=0; i<snake.length; i++){
+                ctx.fillStyle = (i==0) ? "#4CAF50" : "#2E7D32";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+            }
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+            if(d == "LEFT") snakeX -= box;
+            if(d == "UP") snakeY -= box;
+            if(d == "RIGHT") snakeX += box;
+            if(d == "DOWN") snakeY += box;
+
+            if(snakeX == food.x && snakeY == food.y){
+                score++;
+                scoreElement.innerHTML = "Score: " + score;
+                if(score === 12) triggerPrank();
+                food = { x: Math.floor(Math.random()*19+1)*box, y: Math.floor(Math.random()*19+1)*box };
+            } else {
+                snake.pop();
+            }
+            let newHead = { x: snakeX, y: snakeY };
+            if(snakeX<0 || snakeX>=canvas.width || snakeY<0 || snakeY>=canvas.height || collision(newHead, snake)) {
+                snake = [{ x: 9 * box, y: 10 * box }]; d = null; score = 0; scoreElement.innerHTML = "Score: 0";
+            }
+            snake.unshift(newHead);
+        }
+
+        function collision(head, array){
+            for(let i=0; i<array.length; i++) if(head.x == array[i].x && head.y == array[i].y) return true;
+            return false;
+        }
+
+        function triggerPrank() {
+            gameActive = false;
+            glitch.style.display = "flex";
+            let width = 0;
+            let interval = setInterval(() => {
+                if(width >= 70) {
+                    clearInterval(interval);
+                    status.innerText = "CRITICAL ERROR: VIRUS DETECTED";
+                    status.style.color = "red";
+                    glitch.classList.add("shaking");
+                    setTimeout(() => {
+                        glitch.style.display = "none";
+                        modal.style.display = "block";
+                        // PLAY THE AUDIO HERE
+                        prankAudio.play();
+                    }, 1000);
+                } else {
+                    width += 2;
+                    bar.style.width = width + "%";
+                }
+            }, 30)
+        }
+
+        setInterval(draw, 100);
+    </script>
+</body>
+</html>

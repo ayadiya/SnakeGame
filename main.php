@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Erick</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=EB+Garamond:ital,wght@1,400&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --wood: #3d2b1f;
+            --radio-panel: #2b1d12;
+            --gold: #d2b48c;
+            --signal-off: #1a0000;
+            --signal-on: #00ff00;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: #000;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 60px;
+        }
+
+        /* --- LOCK SCREEN OVERLAY --- */
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(35px);
+            -webkit-backdrop-filter: blur(35px);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        #lock-icon {
+            font-size: 80px;
+            color: var(--gold);
+            cursor: pointer;
+            transition: transform 0.3s ease, color 0.5s ease;
+            text-shadow: 0 0 20px rgba(210, 180, 140, 0.5);
+        }
+
+        #lock-icon:hover { transform: scale(1.1); }
+
+        /* CHANGED: Match "Enter the House" font from screenshot */
+        #lock-message {
+            margin-top: 25px;
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            font-size: 55px; 
+            color: #fff;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* --- SLIDING BACKGROUND --- */
+        #bg-slideshow {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+        }
+
+        .bg-slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transform: translateX(-100px);
+            transition: opacity 2s ease-in-out, transform 4s ease-in-out;
+            filter: brightness(0.5);
+        }
+
+        .bg-slide.active { opacity: 1; transform: translateX(0); }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.7) 100%);
+            pointer-events: none; z-index: -1;
+        }
+
+        /* Typewriter remains Special Elite */
+        #caption-container {
+            position: fixed;
+            left: 60px;
+            top: 50px;
+            width: 400px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            font-family: 'Special Elite', cursive;
+            font-size: 1.1rem;
+            z-index: 100;
+        }
+
+        .radio-console {
+            width: 400px;
+            background: var(--wood);
+            border: 10px solid #2b1d12;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 20px 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 10;
+        }
+
+        .speaker-area {
+            height: 100px;
+            background: repeating-linear-gradient(90deg, #1a110a, #1a110a 2px, #2b1d12 2px, #2b1d12 5px);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 2px solid #1a110a;
+        }
+
+        .tuning-panel {
+            background: #e3d5b8;
+            height: 90px;
+            border-radius: 4px;
+            border: 3px solid #8d6e63;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            overflow: hidden;
+        }
+
+        #needle {
+            position: absolute;
+            left: 50%; top: 10%; width: 3px; height: 80%;
+            background: red;
+            transition: transform 0.1s;
+        }
+
+        #signal-light {
+            width: 12px; height: 12px;
+            background: var(--signal-off);
+            border-radius: 50%;
+            border: 1px solid #000;
+            margin-left: 10px;
+        }
+
+        .playing #signal-light {
+            background: var(--signal-on);
+            box-shadow: 0 0 10px var(--signal-on);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .us-photo {
+            width: 70px; height: 70px;
+            border: 3px solid var(--gold);
+            padding: 2px; background: #fff;
+            transform: rotate(-3deg);
+        }
+
+        .radio-knob {
+            width: 45px; height: 45px;
+            background: #1a110a; border-radius: 50%;
+            border: 2px solid var(--gold);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: var(--gold); font-size: 18px;
+        }
+
+        .playing #needle { animation: jitter 0.2s infinite; }
+        @keyframes jitter { 0% { transform: translateX(-1px); } 100% { transform: translateX(1px); } }
+
+        #scrapbook-zone {
+            flex-grow: 1;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .polaroid-gift {
+            position: absolute;
+            width: 250px;
+            background: white;
+            padding: 12px 12px 40px 12px;
+            box-shadow: 5px 10px 25px rgba(0,0,0,0.6);
+            cursor: grab;
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+
+        .polaroid-gift img {
+            width: 100%; height: 180px;
+            object-fit: cover; pointer-events: none;
+        }
+
+        /* CHANGED: Photo captions changed to match the screenshot font style */
+        .polaroid-gift p {
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            font-size: 24px; text-align: center;
+            margin-top: 10px; color: #333;
+        }
+
+        /* CHANGED: Middle Hidden Note font changed to match screenshot */
+        .hidden-note {
+            position: absolute;
+            width: 320px;
+            background: #fdfaf0;
+            border: 2px dashed var(--gold);
+            padding: 25px;
+            text-align: center;
+            z-index: 1;
+            font-family: 'EB Garamond', serif;
+            color: #5d4037;
+            box-shadow: 0 0 30px rgba(210, 180, 140, 0.2);
+        }
+
+        .hidden-note h2 {
+            font-family: 'EB Garamond', serif;
+            font-style: italic;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen">
+        <i class="fas fa-lock" id="lock-icon" onclick="unlockPage()"></i>
+        <div id="lock-message">A gift from me to you</div>
+    </div>
+
+    <div id="bg-slideshow">
+        <div class="bg-slide active" style="background-image: url('car.png');"></div>
+        <div class="bg-slide" style="background-image: url('yes.png');"></div>
+        <div class="bg-slide" style="background-image: url('zy.png');"></div>
+        <div class="bg-slide" style="background-image: url('first.png');"></div>
+        <div class="bg-slide" style="background-image: url('amor.png');"></div>
+        <div class="bg-slide" style="background-image: url('love.png');"></div>
+        <div class="bg-slide" style="background-image: url('bee.png');"></div>
+    </div>
+
+    <div id="caption-container"></div>
+
+    <div class="radio-console" id="radio-body">
+        <div class="speaker-area"></div>
+        <div class="tuning-panel">
+            <img src="us.png" class="us-photo" alt="Us">
+            <div id="frequency-nums" style="font-family: monospace; font-size: 10px; color: #5d4037; letter-spacing: 5px;">88..98..108</div>
+            <div id="needle"></div>
+        </div>
+        <div class="d-flex align-items-center justify-content-between mt-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="radio-knob" onclick="toggleAudio()">
+                    <i class="fas fa-play" id="play-icon"></i>
+                </div>
+                <div id="signal-light"></div>
+            </div>
+            <div style="font-family: 'Special Elite'; font-size: 9px; color: var(--gold);">SIGNAL: STABLE</div>
+        </div>
+    </div>
+
+    <div id="scrapbook-zone">
+        <div class="hidden-note">
+            <h2 style="font-size: 35px;">I love you Erick </h2>
+            <p style="font-size: 18px; font-style: italic; margin-top: 10px;">I hope you appreciate this small effort. To many more months for us mi amor <3</p>
+        </div>
+
+        <div class="polaroid-gift" style="transform: rotate(-5deg); z-index: 7;" onmousedown="startDrag(this, event)"><img src="bee.png"><p>My Honey Bee</p></div>
+        <div class="polaroid-gift" style="transform: rotate(4deg); z-index: 6;" onmousedown="startDrag(this, event)"><img src="love.png"><p>Only mine</p></div>
+        <div class="polaroid-gift" style="transform: rotate(-2deg); z-index: 5;" onmousedown="startDrag(this, event)"><img src="amor.png"><p>Mi Amor</p></div>
+        <div class="polaroid-gift" style="transform: rotate(6deg); z-index: 4;" onmousedown="startDrag(this, event)"><img src="first.png"><p>First Pic</p></div>
+        <div class="polaroid-gift" style="transform: rotate(-6deg); z-index: 3;" onmousedown="startDrag(this, event)"><img src="yes.png"><p>The Day I said Yes</p></div>
+        <div class="polaroid-gift" style="transform: rotate(2deg); z-index: 2;" onmousedown="startDrag(this, event)"><img src="car.png"><p>favorite play mate</p></div>
+    </div>
+
+    <audio id="main-audio" src="audio.mp3"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const audio = document.getElementById('main-audio');
+        const playIcon = document.getElementById('play-icon');
+        const radioBody = document.getElementById('radio-body');
+        const captionContainer = document.getElementById('caption-container');
+        const slides = document.querySelectorAll('.bg-slide');
+        let currentSlide = 0;
+        let highestZ = 10;
+
+      ;
+
+        function unlockPage() {
+            const lockIcon = document.getElementById('lock-icon');
+            const lockScreen = document.getElementById('lock-screen');
+            const lockMsg = document.getElementById('lock-message');
+
+            lockIcon.className = "fas fa-lock-open";
+            lockIcon.style.color = "#fff";
+            
+            setTimeout(() => { lockMsg.style.opacity = "1"; }, 300);
+
+            setTimeout(() => {
+                lockScreen.style.opacity = "0";
+                lockScreen.style.pointerEvents = "none";
+            }, 2500);
+        }
+
+        function startSlideshow() {
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 5000);
+        }
+
+        function toggleAudio() {
+            if (audio.paused) {
+                audio.play();
+                playIcon.className = "fas fa-pause";
+                radioBody.classList.add('playing');
+            } else {
+                audio.pause();
+                playIcon.className = "fas fa-play";
+                radioBody.classList.remove('playing');
+            }
+        }
+
+        function startDrag(element, event) {
+            highestZ++;
+            element.style.zIndex = highestZ;
+            let shiftX = event.clientX - element.getBoundingClientRect().left;
+            let shiftY = event.clientY - element.getBoundingClientRect().top;
+            
+            function moveAt(pageX, pageY) {
+                element.style.left = pageX - shiftX - document.getElementById('scrapbook-zone').getBoundingClientRect().left + 'px';
+                element.style.top = pageY - shiftY - document.getElementById('scrapbook-zone').getBoundingClientRect().top + 'px';
+            }
+            function onMouseMove(event) { moveAt(event.pageX, event.pageY); }
+            document.addEventListener('mousemove', onMouseMove);
+            document.onmouseup = function() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.onmouseup = null;
+            };
+        }
+
+        let currentIdx = -1;
+        audio.addEventListener('timeupdate', () => {
+            const index = captions.findIndex((c, i) => 
+                audio.currentTime >= c.time && (!captions[i+1] || audio.currentTime < captions[i+1].time)
+            );
+            if (index !== currentIdx && index !== -1) {
+                currentIdx = index;
+                typeText(captions[index].text);
+            }
+        });
+
+        function typeText(text) {
+            captionContainer.innerText = "";
+            let i = 0;
+            const timer = setInterval(() => {
+                captionContainer.innerText += text.charAt(i);
+                i++;
+                if (i >= text.length) clearInterval(timer);
+            }, 60);
+        }
+
+        startSlideshow();
+    </script>
+</body>
+</html>
