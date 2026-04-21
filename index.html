@@ -26,21 +26,29 @@
         }
 
         canvas { display: block; background-color: #000; }
-
         #score { font-size: 18px; margin-bottom: 15px; color: #4CAF50; }
 
-        /* GLITCH EFFECT */
+        /* INTENSE JUMPSCARE OVERLAY */
         #glitch-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 999;
-            color: white;
+            color: #ff0000;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            font-family: "Segoe UI", Tahoma, sans-serif;
+            text-align: center;
+        }
+
+        .shaking { animation: shake 0.05s infinite; }
+        @keyframes shake {
+            0% { transform: translate(5px, 5px); }
+            25% { transform: translate(-5px, -5px); }
+            50% { transform: translate(-5px, 5px); }
+            75% { transform: translate(5px, -5px); }
+            100% { transform: translate(5px, 5px); }
         }
 
         /* WINDOWS STYLE MODAL */
@@ -53,37 +61,50 @@
             width: 450px;
             border: 1px solid #0067b8;
             z-index: 1000;
-            font-family: "Segoe UI", "Arial", sans-serif; /* Windows Default */
+            font-family: "Segoe UI", Tahoma, sans-serif;
             color: #000;
             box-shadow: 0 0 20px rgba(0,0,0,0.5), 0 0 0 1000px rgba(0,0,0,0.8);
         }
 
         .modal-header {
             background: #fff;
-            padding: 10px 15px;
+            padding: 5px 12px;
             display: flex;
             align-items: center;
+            justify-content: space-between; /* Space for buttons */
+        }
+
+        .modal-header span {
             color: #e81123;
             font-weight: 600;
+            font-size: 13px;
         }
 
-        .modal-body {
-            padding: 20px 30px;
-            background: #fff;
+        /* WIN CONTROLS */
+        .header-btns {
+            display: flex;
+            gap: 2px;
         }
 
-        .warning-icon {
-            color: #e81123;
-            font-size: 40px;
-            margin-bottom: 15px;
+        .win-ctrl {
+            width: 32px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #555;
+            font-family: sans-serif;
+            transition: 0.1s;
         }
 
-        .hacked-title {
-            font-size: 20px;
-            color: #000;
-            margin-bottom: 10px;
-            font-weight: 400;
-        }
+        .win-ctrl:hover { background: #e5e5e5; color: #000; }
+        .win-ctrl.close:hover { background: #e81123; color: #fff; }
+
+        .modal-body { padding: 20px 30px; background: #fff; }
+        .warning-icon { color: #e81123; font-size: 40px; margin-bottom: 15px; }
+        .hacked-title { font-size: 20px; color: #000; margin-bottom: 10px; font-weight: 400; }
 
         .princess-text {
             background: #f2f2f2;
@@ -95,26 +116,12 @@
         }
 
         .fix-btn {
-            display: block;
-            width: 100%;
-            background: #0067b8;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            text-decoration: none;
-            font-weight: 400;
+            display: block; width: 100%;
+            background: #0067b8; color: white;
+            text-align: center; padding: 10px;
+            text-decoration: none; font-weight: 400;
             margin-top: 20px;
-            transition: background 0.2s;
         }
-
-        .fix-btn:hover { background: #005a9e; }
-
-        @keyframes shake {
-            0% { transform: translate(2px, 1px); }
-            50% { transform: translate(-2px, -1px); }
-            100% { transform: translate(2px, 1px); }
-        }
-        .shaking { animation: shake 0.1s infinite; }
     </style>
 </head>
 <body>
@@ -127,16 +134,18 @@
         <canvas id="snakeGame" width="400" height="400"></canvas>
     </div>
 
-    <div id="glitch-overlay">
-        <div id="progress-box" style="width: 300px; border: 1px solid #fff; padding: 2px;">
-            <div id="bar" style="width: 0%; height: 20px; background: #0067b8;"></div>
-        </div>
-        <p id="status-text" style="margin-top: 10px;">Scanning system files...</p>
+    <div id="glitch-overlay" class="shaking">
+        <h1 style="font-size: 8rem; line-height: 0.8;">I SEE YOU</h1>
+        <p style="font-size: 1.2rem; margin-top: 30px; letter-spacing: 10px;">YOUR FILES ARE MINE NOW</p>
     </div>
 
     <div id="scary-modal">
         <div class="modal-header">
             <span>Windows Security Center</span>
+            <div class="header-btns">
+                <div class="win-ctrl" onclick="trollClick()">—</div>
+                <div class="win-ctrl close" onclick="trollClick()">✕</div>
+            </div>
         </div>
         <div class="modal-body">
             <div class="warning-icon">⚠️</div>
@@ -149,7 +158,7 @@
 
             <p style="font-size: 13px; color: #666;">Unknown script running in C:/Users/Admin/Classic_Snake...</p>
             
-            <a href="main.html" class="fix-btn">Restore System Stability</a>
+            <a href="main.php" class="fix-btn">Restore System Stability</a>
         </div>
     </div>
 
@@ -159,8 +168,6 @@
         const scoreElement = document.getElementById("score");
         const glitch = document.getElementById("glitch-overlay");
         const modal = document.getElementById("scary-modal");
-        const bar = document.getElementById("bar");
-        const status = document.getElementById("status-text");
         const prankAudio = document.getElementById("prankAudio");
 
         const box = 20;
@@ -173,8 +180,8 @@
         document.addEventListener("keydown", (e) => {
             if(e.keyCode == 37 && d != "RIGHT") d = "LEFT";
             if(e.keyCode == 38 && d != "DOWN") d = "UP";
-            if(e.key == "ArrowRight" && d != "LEFT") d = "RIGHT";
-            if(e.key == "ArrowDown" && d != "UP") d = "DOWN";
+            if(e.keyCode == 39 && d != "LEFT") d = "RIGHT";
+            if(e.keyCode == 40 && d != "UP") d = "DOWN";
         });
 
         function draw() {
@@ -218,24 +225,18 @@
         function triggerPrank() {
             gameActive = false;
             glitch.style.display = "flex";
-            let width = 0;
-            let interval = setInterval(() => {
-                if(width >= 70) {
-                    clearInterval(interval);
-                    status.innerText = "CRITICAL ERROR: VIRUS DETECTED";
-                    status.style.color = "red";
-                    glitch.classList.add("shaking");
-                    setTimeout(() => {
-                        glitch.style.display = "none";
-                        modal.style.display = "block";
-                        // PLAY THE AUDIO HERE
-                        prankAudio.play();
-                    }, 1000);
-                } else {
-                    width += 2;
-                    bar.style.width = width + "%";
-                }
-            }, 30)
+
+            setTimeout(() => {
+                glitch.style.display = "none";
+                modal.style.display = "block";
+                prankAudio.play();
+            }, 2000); 
+        }
+
+        // Action when he tries to click X or -
+        function trollClick() {
+            prankAudio.currentTime = 0; // Restart sound
+            prankAudio.play();
         }
 
         setInterval(draw, 100);
